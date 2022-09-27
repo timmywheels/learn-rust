@@ -9,3 +9,4 @@ pub mod request;
 pub mod query_string;
 pub mod response;
 pub mod http_status_code;
+pub mod headers;

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use super::http_method::{HttpMethod, HttpMethodError};
 use super::{QueryString};
 use std::convert::TryFrom;
@@ -5,12 +6,14 @@ use std::error::Error;
 use std::fmt::{Display, Debug, Formatter, Result as FmtResult, write};
 use std::str;
 use std::str::Utf8Error;
+use crate::http::headers::Headers;
 
 #[derive(Debug)]
 pub struct Request<'buf_lifetime> {
     path: &'buf_lifetime str,
     query_string: Option<QueryString<'buf_lifetime>>,
     method: HttpMethod,
+    headers: Option<Headers<'buf_lifetime>>,
 }
 
 impl<'buf_lifetime> Request<'buf_lifetime> {
@@ -30,13 +33,12 @@ impl<'buf_lifetime> Request<'buf_lifetime> {
 impl<'buf_lifetime> TryFrom<&'buf_lifetime [u8]> for Request<'buf_lifetime> {
     type Error = ParseError;
 
-    // GET /hello-world?id=1&name=Tim HTTP/1.1
     fn try_from(buf: &'buf_lifetime [u8]) -> Result<Request<'buf_lifetime>, Self::Error> {
         let request = str::from_utf8(buf)?;
 
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (protocol, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
 
         if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
@@ -50,18 +52,26 @@ impl<'buf_lifetime> TryFrom<&'buf_lifetime [u8]> for Request<'buf_lifetime> {
             path = &path[..index];
         }
 
+        let mut headers = None;
+        if let Some(index) = request.find(':') {
+            headers = Some(Headers::from(request))
+        }
+
         Ok(Self {
             path,
             query_string,
             method,
+            headers,
         })
     }
 }
 
-fn get_next_word(request: &str) -> Option<(&str, &str)> {
+pub fn get_next_word(request: &str) -> Option<(&str, &str)> {
     for (index, char) in request.chars().enumerate() {
         if char == ' ' || char == '\r' {
             return Some((&request[..index], &request[index + 1..]));
+        } else if char == '\n' {
+            return Some((&request[index + 1..], &request[..index]));
         }
     }
     None

@@ -1,17 +1,37 @@
 use std::io;
+use std::io::Write;
 
 fn main() {
-    println!("Enter your weight (lbs): ");
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
 
-    //borrow_string(&input);
-    //own_string(input);
+    let mut y = String::new();
 
-    //println!("Input: {}", input);
-    let weight: f32  = input.trim().parse().unwrap();
-    let mars_weight: f32 = calculate_weight_on_mars(weight);
-    println!("Weight on Mars: {}", mars_weight);
+    println!("Enter a number: ");
+    io::stdin().read_line(&mut y).expect("Failed to read line");
+
+
+    let mut y: u32 = y.trim().parse().expect("Please type a number!");
+    dbg!(y);
+
+    while y > 1 {
+        for _x in 1..11 {
+            // println!("{}", _x);
+            io::stdout().flush().unwrap();
+            print!("#");
+        }
+        y -= 1;
+    }
+
+    // println!("Enter your weight (lbs): ");
+    // let mut input = String::new();
+    // io::stdin().read_line(&mut input).unwrap();
+    //
+    // //borrow_string(&input);
+    // //own_string(input);
+    //
+    // //println!("Input: {}", input);
+    // let weight: f32  = input.trim().parse().unwrap();
+    // let mars_weight: f32 = calculate_weight_on_mars(weight);
+    // println!("Weight on Mars: {}", mars_weight);
 }
 
 fn calculate_weight_on_mars(weight_on_earth: f32) -> f32 {

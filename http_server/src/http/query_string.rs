@@ -39,7 +39,7 @@ impl<'buf_lifetime> From<&'buf_lifetime str> for QueryString<'buf_lifetime> {
                 .or_insert(Value::Single(val));
 
         }
-
+        dbg!(&data);
         QueryString {
             data
         }
